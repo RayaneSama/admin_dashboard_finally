@@ -2,10 +2,11 @@ const mysql = require("mysql");
 const db = require("../config/db");
 
 class Gestionnaire {
-  constructor({ nom, prenom, age, email, motdepasse }) {
+  constructor({ nom, prenom, date_naiss_gestio, photo, email, motdepasse }) {
     this.nom = nom;
     this.prenom = prenom;
-    this.age = age;
+    this.date_naiss_gestio = date_naiss_gestio;
+    this.photo = photo;
     this.email = email;
     this.motdepasse = motdepasse;
   }
@@ -29,7 +30,7 @@ exports.viewGestionnaire = async (req, res) => {
   };
   // Exécute une requête SQL pour récupérer les détails du Gestionnaire avec l'ID spécifié
   db.query(
-    "SELECT id_ge,nom,prenom,age,compte.email_co FROM `gestionnaire de club` JOIN compte ON `gestionnaire de club`.id_co_ge = compte.id_co AND id_ge=?;",
+    "SELECT id_ge,nom,prenom,date_naiss_gestio,photo_ge,compte.email_co FROM `gestionnaire de club` JOIN compte ON `gestionnaire de club`.id_co_ge = compte.id_co AND id_ge=?;",
     [GestionnaireId],
     (err, result) => {
       if (err) {
@@ -65,11 +66,11 @@ exports.postGestionnaire = async (req, res) => {
   const newGestionnaire = new Gestionnaire({
     nom: req.body.nom,
     prenom: req.body.prenom,
-    age: req.body.age,
+    date_naiss_gestio: req.body.date_naiss_gestio,
     email: req.body.email,
     motdepasse: req.body.motdepasse,
   });
-
+  photo = req.file.filename;
   db.query(
     "INSERT INTO compte (id_type,nom_utilisateur, mot_de_passe, email_co) VALUES (?,?,?,?)",
     [
@@ -96,14 +97,16 @@ exports.postGestionnaire = async (req, res) => {
               .status(500)
               .send("erreur sql avoir id compte du Gestionnaire");
           }
+          console.log(req.file.filename);
           db.query(
-            "INSERT INTO `gestionnaire de club` (nom, prenom,id_ad_ge,age,id_co_ge) VALUES (?,?,?,?,?) ",
+            "INSERT INTO `gestionnaire de club` (nom, prenom,id_ad_ge,date_naiss_gestio,id_co_ge,photo_ge) VALUES (?,?,?,?,?,?) ",
             [
               newGestionnaire.nom,
               newGestionnaire.prenom,
               2,
-              newGestionnaire.age,
+              newGestionnaire.date_naiss_gestio,
               resultid[0].id_co,
+              req.file.filename,
             ],
             async (err, result) => {
               if (err) {
@@ -145,14 +148,14 @@ exports.gererGestionnaire = async (req, res) => {
     title: "Gestion des Gestionnaire",
   };
   db.query(
-    "SELECT id_ge,nom, prenom,age,compte.email_co FROM `gestionnaire de club` JOIN compte ON `gestionnaire de club`.id_co_ge = compte.id_co; ",
+    "SELECT id_ge,nom, prenom,photo_ge,date_naiss_gestio,compte.email_co FROM `gestionnaire de club` JOIN compte ON `gestionnaire de club`.id_co_ge = compte.id_co; ",
     (err, result) => {
       if (err) {
         console.error("erreur sql select data Gestionnaires  " + err);
         return res.status(500).send("erreur sql select data Gestionnaires");
       }
 
-      // console.log(result)
+      console.log(result);
 
       res.render("AdminIndex", {
         locals,
@@ -168,7 +171,7 @@ exports.gererGestionnaire = async (req, res) => {
 exports.editGestionnaire = async (req, res) => {
   const userId = req.params.id;
   db.query(
-    "SELECT id_ge,nom,prenom,age,compte.email_co,mot_de_passe FROM `gestionnaire de club` JOIN compte ON `gestionnaire de club`.id_co_ge = compte.id_co AND id_ge=?",
+    "SELECT id_ge,nom,prenom,date_naiss_gestio,compte.email_co,mot_de_passe FROM `gestionnaire de club` JOIN compte ON `gestionnaire de club`.id_co_ge = compte.id_co AND id_ge=?",
     [userId],
     (err, result) => {
       if (err) {
@@ -187,8 +190,13 @@ exports.editpostGestio = async (req, res) => {
   //console.log(req.params.id);
 
   db.query(
-    "UPDATE `gestionnaire de club` SET nom =?,prenom =?,age=? WHERE id_ge=?",
-    [req.body.nom_ge, req.body.prenom_ge, req.body.age_ge, req.params.id],
+    "UPDATE `gestionnaire de club` SET nom =?,prenom =?,date_naiss_gestio=? WHERE id_ge=?",
+    [
+      req.body.nom_ge,
+      req.body.prenom_ge,
+      req.body.date_naiss_gestio,
+      req.params.id,
+    ],
     (err, result) => {
       if (err) {
         console.error("erreur update gestionnaire" + err);
@@ -610,17 +618,11 @@ exports.editpostStades = async (req, res) => {
 
 // la partie gestion des articles
 class Articles {
-  constructor({
-    date_art,
-    titre_art,
-    description_art,
-    format_art,
-    auteur_art,
-  }) {
+  constructor({ date_art, titre_art, description_art, image_art, auteur_art }) {
     this.date_art = date_art;
     this.titre_art = titre_art;
     this.description_art = description_art;
-    this.format_art = format_art;
+    this.image_art = image_art;
     this.auteur_art = auteur_art;
   }
 }
@@ -631,7 +633,7 @@ exports.viewArticles = async (req, res) => {
   };
   // Exécute une requête SQL pour récupérer les détails de l'article avec l'ID spécifié
   db.query(
-    "SELECT id_art, date_art, titre_art, description_art, format_art,auteur_art FROM article WHERE id_art = ?;",
+    "SELECT id_art, date_art, titre_art, description_art,image_art,auteur_art FROM article WHERE id_art = ?;",
     [ArticleId],
     (err, result) => {
       if (err) {
@@ -685,7 +687,7 @@ exports.gererArticles = async (req, res) => {
 exports.editArticles = async (req, res) => {
   const ArticleId = req.params.id;
   db.query(
-    "SELECT id_art, date_art, titre_art, description_art, format_art,auteur_art FROM article where id_art=?",
+    "SELECT id_art, date_art, titre_art, description_art,image_art,auteur_art FROM article where id_art=?",
     [ArticleId],
     (err, result) => {
       if (err) {
@@ -716,17 +718,17 @@ exports.postArticles = async (req, res) => {
   const newArticle = new Articles({
     titre_art: req.body.titre,
     description_art: req.body.description,
-    format_art: req.body.format,
+    image_art: req.body.image_art,
     date_art: req.body.date,
     auteur_art: req.body.auteur,
   });
 
   db.query(
-    "INSERT INTO article (titre_art, description_art, format_art, date_art,auteur_art) VALUES (?, ?,?,?,?)",
+    "INSERT INTO article (titre_art, description_art, image_art, date_art,auteur_art) VALUES (?, ?,?,?,?)",
     [
       newArticle.titre_art,
       newArticle.description_art,
-      newArticle.format_art,
+      newArticle.image_art,
       newArticle.date_art,
       newArticle.auteur_art,
     ],
@@ -761,12 +763,12 @@ exports.editpostArticles = async (req, res) => {
   //console.log(req.params.id);
 
   db.query(
-    "UPDATE article SET titre_art =?,description_art =?,date_art=?,format_art=?,auteur_art=? WHERE id_art=?",
+    "UPDATE article SET titre_art =?,description_art =?,date_art=?,image_art=?,auteur_art=? WHERE id_art=?",
     [
       req.body.titre_article,
       req.body.description_article,
       req.body.date_article,
-      req.body.format_article,
+      req.body.image_art,
       req.body.auteur_article,
       req.params.id,
     ],

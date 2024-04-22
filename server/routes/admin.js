@@ -2,6 +2,18 @@ const express = require("express");
 const router = express.Router();
 const adminController = require("../controllers/adminController");
 const { requireAuth } = require("../config/auth");
+const path = require("path");
+
+const multer = require("multer");
+const storage = multer.diskStorage({
+  destination: path.join(__dirname, "../images"),
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    return cb(null, uniqueSuffix + "-" + file.originalname);
+  },
+});
+
+const upload = multer({ storage: storage });
 
 router.get("/admin", requireAuth, adminController.homepageAdmin); // renvoie la page d'acceuil de admin : la definition de la requete get est dans le fichier adminContoller
 router.get("/detailGestio/:id", requireAuth, adminController.viewGestionnaire);
@@ -13,6 +25,7 @@ router.get(
 );
 router.post(
   "/ajouter_gestionnaire",
+  upload.single("photoGestionnaire"),
   requireAuth,
   adminController.postGestionnaire
 );
@@ -22,7 +35,12 @@ router.delete(
   requireAuth,
   adminController.supprimerGestionnaire
 );
-router.put("/edit/:id", requireAuth, adminController.editpostGestio);
+router.put(
+  "/edit/:id",
+  upload.single("photoGestionnaire"),
+  requireAuth,
+  adminController.editpostGestio
+);
 router.get(
   "/gererGestionnaire",
   requireAuth,
