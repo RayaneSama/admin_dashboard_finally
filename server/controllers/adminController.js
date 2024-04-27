@@ -90,7 +90,7 @@ exports.postGestionnaire = async (req, res) => {
         "SELECT id_co FROM compte WHERE email_co =? ",
         [newGestionnaire.email],
         (err, resultid) => {
-          console.log(resultid);
+          //console.log(resultid);
           if (err) {
             console.error("erreur avoir id  compte " + err);
             return res
@@ -155,7 +155,7 @@ exports.gererGestionnaire = async (req, res) => {
         return res.status(500).send("erreur sql select data Gestionnaires");
       }
 
-      console.log(result);
+      // console.log(result);
 
       res.render("AdminIndex", {
         locals,
@@ -171,7 +171,7 @@ exports.gererGestionnaire = async (req, res) => {
 exports.editGestionnaire = async (req, res) => {
   const userId = req.params.id;
   db.query(
-    "SELECT id_ge,nom,prenom,date_naiss_gestio,compte.email_co,mot_de_passe FROM `gestionnaire de club` JOIN compte ON `gestionnaire de club`.id_co_ge = compte.id_co AND id_ge=?",
+    "SELECT id_ge,nom,prenom,date_naiss_gestio,photo_ge,compte.email_co,mot_de_passe FROM `gestionnaire de club` JOIN compte ON `gestionnaire de club`.id_co_ge = compte.id_co AND id_ge=?",
     [userId],
     (err, result) => {
       if (err) {
@@ -188,48 +188,93 @@ exports.editGestionnaire = async (req, res) => {
 // put edit gestionnaire
 exports.editpostGestio = async (req, res) => {
   //console.log(req.params.id);
-
-  db.query(
-    "UPDATE `gestionnaire de club` SET nom =?,prenom =?,date_naiss_gestio=? WHERE id_ge=?",
-    [
-      req.body.nom_ge,
-      req.body.prenom_ge,
-      req.body.date_naiss_gestio,
-      req.params.id,
-    ],
-    (err, result) => {
-      if (err) {
-        console.error("erreur update gestionnaire" + err);
-        return res.status(500).send("erreur sql update gestionnaire");
-      }
-      db.query(
-        "SELECT id_co_ge FROM `gestionnaire de club` WHERE id_ge=? ",
-        [req.params.id],
-        (err, residcoge) => {
-          if (err) {
-            console.error("erreur update gestionnaire" + err);
-            return res.status(500).send("erreur sql update gestionnaire");
-          }
-          //console.log(residcoge);
-          db.query(
-            "UPDATE compte SET nom_utilisateur=?,mot_de_passe=?,email_co=? WHERE id_co=?",
-            [
-              req.body.nom_ge + "" + req.body.prenom_ge,
-              req.body.motdepasse_ge,
-              req.body.email_ge,
-              residcoge[0].id_co_ge,
-            ],
-            (err, resultcompte) => {
-              if (err) {
-                console.error("erreur update gestionnaire" + err);
-                return res.status(500).send("erreur sql update gestionnaire");
-              }
-            }
-          );
+  if (req.file) {
+    photo = req.file.filename;
+    db.query(
+      "UPDATE `gestionnaire de club` SET nom =?,prenom =?,date_naiss_gestio=?,photo_ge=? WHERE id_ge=?",
+      [
+        req.body.nom_ge,
+        req.body.prenom_ge,
+        req.body.date_naiss_gestio,
+        photo,
+        req.params.id,
+      ],
+      (err, result) => {
+        if (err) {
+          console.error("erreur update gestionnaire" + err);
+          return res.status(500).send("erreur sql update gestionnaire");
         }
-      );
-    }
-  );
+        db.query(
+          "SELECT id_co_ge FROM `gestionnaire de club` WHERE id_ge=? ",
+          [req.params.id],
+          (err, residcoge) => {
+            if (err) {
+              console.error("erreur update gestionnaire" + err);
+              return res.status(500).send("erreur sql update gestionnaire");
+            }
+            //console.log(residcoge);
+            db.query(
+              "UPDATE compte SET nom_utilisateur=?,mot_de_passe=?,email_co=? WHERE id_co=?",
+              [
+                req.body.nom_ge + "" + req.body.prenom_ge,
+                req.body.motdepasse_ge,
+                req.body.email_ge,
+                residcoge[0].id_co_ge,
+              ],
+              (err, resultcompte) => {
+                if (err) {
+                  console.error("erreur update gestionnaire" + err);
+                  return res.status(500).send("erreur sql update gestionnaire");
+                }
+              }
+            );
+          }
+        );
+      }
+    );
+  } else {
+    db.query(
+      "UPDATE `gestionnaire de club` SET nom =?,prenom =?,date_naiss_gestio=? WHERE id_ge=?",
+      [
+        req.body.nom_ge,
+        req.body.prenom_ge,
+        req.body.date_naiss_gestio,
+        req.params.id,
+      ],
+      (err, result) => {
+        if (err) {
+          console.error("erreur update gestionnaire" + err);
+          return res.status(500).send("erreur sql update gestionnaire");
+        }
+        db.query(
+          "SELECT id_co_ge FROM `gestionnaire de club` WHERE id_ge=? ",
+          [req.params.id],
+          (err, residcoge) => {
+            if (err) {
+              console.error("erreur update gestionnaire" + err);
+              return res.status(500).send("erreur sql update gestionnaire");
+            }
+            //console.log(residcoge);
+            db.query(
+              "UPDATE compte SET nom_utilisateur=?,mot_de_passe=?,email_co=? WHERE id_co=?",
+              [
+                req.body.nom_ge + "" + req.body.prenom_ge,
+                req.body.motdepasse_ge,
+                req.body.email_ge,
+                residcoge[0].id_co_ge,
+              ],
+              (err, resultcompte) => {
+                if (err) {
+                  console.error("erreur update gestionnaire" + err);
+                  return res.status(500).send("erreur sql update gestionnaire");
+                }
+              }
+            );
+          }
+        );
+      }
+    );
+  }
 
   await req.flash("info", "Gestionnaire Modifié !!");
 
@@ -254,7 +299,7 @@ exports.viewArbitres = async (req, res) => {
   };
   // Exécute une requête SQL pour récupérer les détails de l'arbitre avec l'ID spécifié
   db.query(
-    "SELECT arb.id_ar, arb.nom_ar, arb.prenom_ar, arb.poste_ar, cpt.email_co FROM arbitre AS arb JOIN compte AS cpt ON arb.id_co_ar = cpt.id_co WHERE arb.id_ar = ?;",
+    "SELECT arb.id_ar, arb.nom_ar, arb.prenom_ar, arb.poste_ar,arb.photo_ar, cpt.email_co FROM arbitre AS arb JOIN compte AS cpt ON arb.id_co_ar = cpt.id_co WHERE arb.id_ar = ?;",
     [ArbitreId],
     (err, result) => {
       if (err) {
@@ -281,7 +326,7 @@ exports.gererArbitres = async (req, res) => {
     title: "Gestion des arbitres",
   };
   db.query(
-    "SELECT id_ar, nom_ar, prenom_ar, compte.email_co FROM arbitre JOIN compte ON arbitre.id_co_ar = compte.id_co",
+    "SELECT id_ar, nom_ar, prenom_ar, compte.email_co,photo_ar FROM arbitre JOIN compte ON arbitre.id_co_ar = compte.id_co",
     (err, result) => {
       if (err) {
         console.error("erreur sql select data arbitres: " + err);
@@ -289,12 +334,6 @@ exports.gererArbitres = async (req, res) => {
       }
 
       //console.log("Query result:", result);
-
-      if (!result || result.length === 0) {
-        return res
-          .status(404)
-          .send("Aucun arbitre trouvé dans la base de données");
-      }
 
       res.render("ArbitresIndex", {
         locals,
@@ -337,11 +376,12 @@ exports.addArbitres = async (req, res) => {
 
 exports.postArbitres = async (req, res) => {
   //  console.log(req.body);
-
+  photo = req.file.filename;
   const newArbitre = new Arbitre({
-    nom_ar: req.body.nom,
-    prenom_ar: req.body.prenom,
+    nom_ar: req.body.nom_ar,
+    prenom_ar: req.body.prenom_ar,
     poste_ar: req.body.poste,
+    photo,
     email_co: req.body.email,
     motdepasse: req.body.motdepasse,
   });
@@ -350,9 +390,9 @@ exports.postArbitres = async (req, res) => {
     "INSERT INTO compte (id_type,nom_utilisateur, mot_de_passe, email_co) VALUES (?,?,?,?)",
     [
       4,
-      newArbitre.nom_ar + " " + newArbitre.prenom_ar,
-      newArbitre.motdepasse,
-      newArbitre.email,
+      req.body.nom_ar + " " + req.body.prenom_ar,
+      req.body.motdepasse,
+      req.body.email,
     ],
     (err, result) => {
       if (err) {
@@ -361,7 +401,7 @@ exports.postArbitres = async (req, res) => {
       }
       db.query(
         "SELECT id_co FROM compte WHERE email_co =? ",
-        [newArbitre.email],
+        [req.body.email],
         (err, resultid) => {
           console.log(resultid);
           if (err) {
@@ -370,12 +410,12 @@ exports.postArbitres = async (req, res) => {
           }
           // a voir -------------------------------------------------------------------------
           db.query(
-            "INSERT INTO arbitre (nom_ar, prenom_ar,id_ma_ar,poste_ar,id_co_ar) VALUES (?,?,?,?,?) ",
+            "INSERT INTO arbitre (nom_ar, prenom_ar,poste_ar,photo_ar,id_co_ar) VALUES (?,?,?,?,?) ",
             [
               newArbitre.nom,
               newArbitre.prenom,
-              6,
               newArbitre.poste,
+              photo,
               resultid[0].id_co,
             ],
             async (err, result) => {
@@ -399,43 +439,82 @@ exports.postArbitres = async (req, res) => {
 // put edit arbitre
 exports.editpostArbitres = async (req, res) => {
   // console.log(req.params.id);
-
-  db.query(
-    "UPDATE arbitre SET nom_ar =?,prenom_ar =? WHERE id_ar=?",
-    [req.body.nom_ar, req.body.prenom_ar, req.params.id],
-    (err, result) => {
-      if (err) {
-        console.error("erreur update arbitre" + err);
-        return res.status(500).send("erreur sql update arbitre");
-      }
-      db.query(
-        "SELECT id_co_ar FROM arbitre WHERE id_ar=? ",
-        [req.params.id],
-        (err, residcoar) => {
-          if (err) {
-            console.error("erreur update arbitre" + err);
-            return res.status(500).send("erreur sql update arbitre");
-          }
-          // console.log(residcoar);
-          db.query(
-            "UPDATE compte SET nom_utilisateur=?,mot_de_passe=?,email_co=? WHERE id_co=?",
-            [
-              req.body.nom_ar + "" + req.body.prenom_ar,
-              req.body.motdepasse_ar,
-              req.body.email_ar,
-              residcoar[0].id_co_ar,
-            ],
-            (err, resultcompte) => {
-              if (err) {
-                console.error("erreur update arbitre" + err);
-                return res.status(500).send("erreur sql update arbitre");
-              }
-            }
-          );
+  if (req.file) {
+    photo = req.file.filename;
+    db.query(
+      "UPDATE arbitre SET nom_ar =?,prenom_ar =? ,photo_ar=? WHERE id_ar=?",
+      [req.body.nom_ar, req.body.prenom_ar, photo, req.params.id],
+      (err, result) => {
+        if (err) {
+          console.error("erreur update arbitre" + err);
+          return res.status(500).send("erreur sql update arbitre");
         }
-      );
-    }
-  );
+        db.query(
+          "SELECT id_co_ar FROM arbitre WHERE id_ar=? ",
+          [req.params.id],
+          (err, residcoar) => {
+            if (err) {
+              console.error("erreur update arbitre" + err);
+              return res.status(500).send("erreur sql update arbitre");
+            }
+            // console.log(residcoar);
+            db.query(
+              "UPDATE compte SET nom_utilisateur=?,mot_de_passe=?,email_co=? WHERE id_co=?",
+              [
+                req.body.nom_ar + "" + req.body.prenom_ar,
+                req.body.motdepasse_ar,
+                req.body.email_ar,
+                residcoar[0].id_co_ar,
+              ],
+              (err, resultcompte) => {
+                if (err) {
+                  console.error("erreur update arbitre" + err);
+                  return res.status(500).send("erreur sql update arbitre");
+                }
+              }
+            );
+          }
+        );
+      }
+    );
+  } else {
+    db.query(
+      "UPDATE arbitre SET nom_ar =?,prenom_ar =? WHERE id_ar=?",
+      [req.body.nom_ar, req.body.prenom_ar, req.params.id],
+      (err, result) => {
+        if (err) {
+          console.error("erreur update arbitre" + err);
+          return res.status(500).send("erreur sql update arbitre");
+        }
+        db.query(
+          "SELECT id_co_ar FROM arbitre WHERE id_ar=? ",
+          [req.params.id],
+          (err, residcoar) => {
+            if (err) {
+              console.error("erreur update arbitre" + err);
+              return res.status(500).send("erreur sql update arbitre");
+            }
+            // console.log(residcoar);
+            db.query(
+              "UPDATE compte SET nom_utilisateur=?,mot_de_passe=?,email_co=? WHERE id_co=?",
+              [
+                req.body.nom_ar + "" + req.body.prenom_ar,
+                req.body.motdepasse_ar,
+                req.body.email_ar,
+                residcoar[0].id_co_ar,
+              ],
+              (err, resultcompte) => {
+                if (err) {
+                  console.error("erreur update arbitre" + err);
+                  return res.status(500).send("erreur sql update arbitre");
+                }
+              }
+            );
+          }
+        );
+      }
+    );
+  }
 
   await req.flash("info", "Arbitre Modifié !!");
 
@@ -715,33 +794,58 @@ exports.addArticles = async (req, res) => {
 };
 
 exports.postArticles = async (req, res) => {
+  photo = req.file.filename;
   const newArticle = new Articles({
     titre_art: req.body.titre,
     description_art: req.body.description,
-    image_art: req.body.image_art,
+    photo,
     date_art: req.body.date,
     auteur_art: req.body.auteur,
   });
-
-  db.query(
-    "INSERT INTO article (titre_art, description_art, image_art, date_art,auteur_art) VALUES (?, ?,?,?,?)",
-    [
-      newArticle.titre_art,
-      newArticle.description_art,
-      newArticle.image_art,
-      newArticle.date_art,
-      newArticle.auteur_art,
-    ],
-    (err, result) => {
-      if (err) {
-        console.error("Erreur lors de l'insertion de l'article :", err);
-        return res.status(500).send("Erreur lors de l'insertion de l'article");
+  if (req.file) {
+    db.query(
+      "INSERT INTO article (titre_art, description_art, image_art, date_art,auteur_art) VALUES (?,?,?,?,?)",
+      [
+        newArticle.titre_art,
+        newArticle.description_art,
+        photo,
+        newArticle.date_art,
+        newArticle.auteur_art,
+      ],
+      (err, result) => {
+        if (err) {
+          console.error("Erreur lors de l'insertion de l'article :", err);
+          return res
+            .status(500)
+            .send("Erreur lors de l'insertion de l'article");
+        }
+        console.log("Nouveau article inséré avec l'ID :", result.insertId);
+        req.flash("info", "Article ajouté avec succès !");
+        res.redirect("/gererArticles");
       }
-      console.log("Nouveau article inséré avec l'ID :", result.insertId);
-      req.flash("info", "Article ajouté avec succès !");
-      res.redirect("/gererArticles");
-    }
-  );
+    );
+  } else {
+    db.query(
+      "INSERT INTO article (titre_art, description_art, date_art,auteur_art) VALUES (?,?,?,?,?)",
+      [
+        newArticle.titre_art,
+        newArticle.description_art,
+        newArticle.date_art,
+        newArticle.auteur_art,
+      ],
+      (err, result) => {
+        if (err) {
+          console.error("Erreur lors de l'insertion de l'article :", err);
+          return res
+            .status(500)
+            .send("Erreur lors de l'insertion de l'article");
+        }
+        //console.log("Nouveau article inséré avec l'ID :", result.insertId);
+        req.flash("info", "Article ajouté avec succès !");
+        res.redirect("/gererArticles");
+      }
+    );
+  }
 };
 
 exports.supprimerArticles = async (req, res) => {
@@ -761,24 +865,44 @@ exports.supprimerArticles = async (req, res) => {
 // put edit arbitre
 exports.editpostArticles = async (req, res) => {
   //console.log(req.params.id);
-
-  db.query(
-    "UPDATE article SET titre_art =?,description_art =?,date_art=?,image_art=?,auteur_art=? WHERE id_art=?",
-    [
-      req.body.titre_article,
-      req.body.description_article,
-      req.body.date_article,
-      req.body.image_art,
-      req.body.auteur_article,
-      req.params.id,
-    ],
-    (err, result) => {
-      if (err) {
-        console.error("erreur update article" + err);
-        return res.status(500).send("erreur sql update article");
+  if (req.file) {
+    photo = req.file.filename;
+    console.log(photo);
+    db.query(
+      "UPDATE article SET titre_art =?,description_art =?,date_art=?,image_art=?,auteur_art=? WHERE id_art=?",
+      [
+        req.body.titre_article,
+        req.body.description_article,
+        req.body.date_article,
+        photo,
+        req.body.auteur_article,
+        req.params.id,
+      ],
+      (err, result) => {
+        if (err) {
+          console.error("erreur update article" + err);
+          return res.status(500).send("erreur sql update article");
+        }
       }
-    }
-  );
+    );
+  } else {
+    db.query(
+      "UPDATE article SET titre_art =?,description_art =?,date_art=?,auteur_art=? WHERE id_art=?",
+      [
+        req.body.titre_article,
+        req.body.description_article,
+        req.body.date_article,
+        req.body.auteur_article,
+        req.params.id,
+      ],
+      (err, result) => {
+        if (err) {
+          console.error("erreur update article" + err);
+          return res.status(500).send("erreur sql update article");
+        }
+      }
+    );
+  }
 
   await req.flash("info", "Article Modifié !!");
 
@@ -822,7 +946,13 @@ exports.viewMatches = async (req, res) => {
   };
   // Exécute une requête SQL pour récupérer les détails du match avec l'ID spécifié
   db.query(
-    "SELECT id_ma, date_ma, horaire_ma, equipe_1, score_eq1, equipe_2, score_eq2, carton_j_ma, carton_r_ma, homme_ma, id_ge_ma, id_std_ma, id_journee_ma FROM `match` WHERE id_ma = ?;",
+    `SELECT m.id_ma, m.date_ma, m.horaire_ma, m.equipe_1, m.equipe_2, m.id_ge_ma, m.id_std_ma, m.journee_ma,
+    g.nom AS gestionnaire_nom, g.prenom AS gestionnaire_prenom,
+    s.nom_std AS stade_nom, s.ville_std AS stade_ville, s.adresse_std AS stade_adresse, s.capacite_std AS stade_capacite, s.img_std AS stade_img, s.date_crt AS stade_date_crt, s.id_eq_std AS stade_id_equipe
+    FROM \`match\` m
+    JOIN \`gestionnaire de club\` g ON m.id_ge_ma = g.id_ge
+    JOIN \`stade\` s ON m.id_std_ma = s.id_std
+    WHERE m.id_ma = ?`,
     [MatchId],
     (err, result) => {
       if (err) {
@@ -843,6 +973,7 @@ exports.viewMatches = async (req, res) => {
     }
   );
 };
+
 exports.gererMatches = async (req, res) => {
   const messages = await req.flash("info");
   const locals = {
@@ -857,12 +988,6 @@ exports.gererMatches = async (req, res) => {
       }
 
       //console.log("Query result:", result);
-
-      if (!result || result.length === 0) {
-        return res
-          .status(404)
-          .send("Aucun match trouvé dans la base de données");
-      }
 
       res.render("MatchesIndex", {
         locals,
@@ -897,9 +1022,14 @@ exports.addMatches = async (req, res) => {
   const locals = {
     title: "Ajouter un Match",
   };
-  res.render("../views/Admin/Matches/addMatches", {
-    locals,
-    layout: "./layouts/mainAdmin.ejs",
+  db.query("select nom_eq from equipe", (err, result) => {
+    if (err) console.log("Erreur");
+    //console.log(result);
+    res.render("../views/Admin/Matches/addMatches", {
+      locals,
+      layout: "./layouts/mainAdmin.ejs",
+      result,
+    });
   });
 };
 
@@ -932,7 +1062,7 @@ exports.postMatches = async (req, res) => {
         console.error("Erreur lors de l'insertion du match :", err);
         return res.status(500).send("Erreur lors de l'insertion du match");
       }
-      console.log("Nouveau match inséré avec l'ID :", result.insertId);
+      //console.log("Nouveau match inséré avec l'ID :", result.insertId);
       req.flash("info", "Match ajouté avec succès !");
       res.redirect("/gererMatches");
     }
@@ -983,206 +1113,286 @@ exports.editpostMatches = async (req, res) => {
   res.redirect(`/gererMatches`);
 };
 
-//la partie gestion des equipes
-class Equipes {
-  constructor({
-    date_art,
-    titre_art,
-    description_art,
-    format_art,
-    auteur_art,
-  }) {
-    this.date_art = date_art;
-    this.titre_art = titre_art;
-    this.description_art = description_art;
-    this.format_art = format_art;
-    this.auteur_art = auteur_art;
-  }
-}
-exports.viewArticles = async (req, res) => {
-  const ArticleId = req.params.id; // Récupère l'ID de l'article depuis l'URL
+//la partie des equipes
+exports.viewEquipes = async (req, res) => {
+  const EquipeId = req.params.id; // Récupère l'ID de l'equipe depuis l'URL
   const locals = {
     title: "Voir Détails",
   };
-  // Exécute une requête SQL pour récupérer les détails de l'article avec l'ID spécifié
+  // Exécute une requête SQL pour récupérer les détails de l'equipe avec l'ID spécifié
   db.query(
-    "SELECT id_art, date_art, titre_art, description_art, format_art,auteur_art FROM article WHERE id_art = ?;",
-    [ArticleId],
+    "SELECT id_eq,nom_eq,logo_eq,abre_eq,date_eq,ville_eq FROM equipe WHERE id_eq = ?;",
+    [EquipeId],
     (err, result) => {
       if (err) {
-        console.error("erreur sql id article" + err);
-        return res.status(500).send("erreur sql id article");
+        console.error("erreur sql id equipe" + err);
+        return res.status(500).send("erreur sql id equipe");
       }
       //console.log("Query result:", result); // Log the query result
-      if (result.length === 0) {
-        return res.status(404).send("Aucun article trouvé avec cet ID");
-      }
-      const id = result[0].id_art;
-      res.render("../views/Admin/Articles/detailsArticles", {
+      const id = result[0].id_eq;
+      res.render("../views/Admin/Equipes/detailsEquipes", {
         locals,
         id,
         result,
         layout: "./layouts/mainAdmin.ejs",
-      }); // Rend la vue avec les détails de l'article
+      }); // Rend la vue avec les détails de l'equipe
     }
   );
 };
-exports.gererArticles = async (req, res) => {
+exports.gererEquipes = async (req, res) => {
   const messages = await req.flash("info");
   const locals = {
-    title: "Gestion des Articles",
+    title: "Gestion des Equipes",
   };
-  db.query(
-    "SELECT id_art,titre_art,auteur_art FROM article;",
-    (err, result) => {
-      if (err) {
-        console.error("erreur sql select data articles: " + err);
-        return res.status(500).send("erreur sql select data articles");
-      }
-
-      //console.log("Query result:", result);
-
-      if (!result || result.length === 0) {
-        return res
-          .status(404)
-          .send("Aucun article trouvé dans la base de données");
-      }
-
-      res.render("ArticlesIndex", {
-        locals,
-        messages,
-        result,
-        layout: "./layouts/mainAdmin.ejs",
-      });
+  db.query("SELECT id_eq, nom_eq, logo_eq FROM equipe;", (err, result) => {
+    if (err) {
+      console.error("erreur sql select data equipes: " + err);
+      return res.status(500).send("erreur sql select data equipes");
     }
-  );
+    //console.log("Query result:", result);
+
+    res.render("EquipesIndex", {
+      locals,
+      messages,
+      result,
+      layout: "./layouts/mainAdmin.ejs",
+    });
+  });
 };
-exports.editArticles = async (req, res) => {
-  const ArticleId = req.params.id;
+exports.editEquipes = async (req, res) => {
+  const EquipeId = req.params.id;
   db.query(
-    "SELECT id_art, date_art, titre_art, description_art, format_art,auteur_art FROM article where id_art=?",
-    [ArticleId],
+    "SELECT id_eq, nom_eq, abre_eq, logo_eq,ville_eq,date_eq FROM equipe where id_eq=?",
+    [EquipeId],
     (err, result) => {
       if (err) {
-        console.error("erreur sql select data stades  " + err);
-        return res.status(500).send("erreur sql select data stades");
+        console.error("erreur sql select data equipe  " + err);
+        return res.status(500).send("erreur sql select data equipes");
       }
-      res.render("../views/Admin/Articles/modifierArticles", {
+      res.render("../views/Admin/Equipes/modifierEquipes", {
         result,
-        ArticleId,
+        EquipeId,
         layout: "./layouts/mainAdmin.ejs",
       });
     }
   );
 };
 
-//get nouveau Articles
-exports.addArticles = async (req, res) => {
+//get nouveau Equipes
+exports.addEquipes = async (req, res) => {
   const locals = {
-    title: "Ajouter un Article",
+    title: "Ajouter une Equipe",
   };
-  res.render("../views/Admin/Articles/addArticles", {
-    locals,
-    layout: "./layouts/mainAdmin.ejs",
-  });
-};
-
-exports.postArticles = async (req, res) => {
-  const newArticle = new Articles({
-    titre_art: req.body.titre,
-    description_art: req.body.description,
-    format_art: req.body.format,
-    date_art: req.body.date,
-    auteur_art: req.body.auteur,
-  });
 
   db.query(
-    "INSERT INTO article (titre_art, description_art, format_art, date_art,auteur_art) VALUES (?, ?,?,?,?)",
-    [
-      newArticle.titre_art,
-      newArticle.description_art,
-      newArticle.format_art,
-      newArticle.date_art,
-      newArticle.auteur_art,
-    ],
+    "SELECT e.id_eq, e.nom_eq, e.abre_eq, e.logo_eq, e.date_eq, e.ville_eq, e.m_gagner_eq, e.m_nul_eq, e.m_perdu_eq, e.nbr_but_p_eq, e.nbr_but_c_eq, e.points_eq, e.diff_eq, e.observation_eq, e.titres_remp_eq, e.id_ge_eq, e.id_dev_eq, e.id_co_ge_eq, g.nom AS gestionnaire_nom, g.prenom AS gestionnaire_prenom FROM equipe e JOIN `gestionnaire de club` g ON e.id_ge_eq = g.id_ge;",
     (err, result) => {
       if (err) {
-        console.error("Erreur lors de l'insertion de l'article :", err);
-        return res.status(500).send("Erreur lors de l'insertion de l'article");
+        console.error("erreur sql select data gestionnaires  " + err);
+        return res.status(500).send("erreur sql select data gestionnaire");
       }
-      console.log("Nouveau article inséré avec l'ID :", result.insertId);
-      req.flash("info", "Article ajouté avec succès !");
-      res.redirect("/gererArticles");
+
+      res.render("../views/Admin/Equipes/addEquipes", {
+        locals,
+        result,
+        layout: "./layouts/mainAdmin.ejs",
+      });
     }
   );
 };
 
-exports.supprimerArticles = async (req, res) => {
+exports.postEquipes = async (req, res) => {
+  photo = req.file.filename;
+  if (req.file) {
+    db.query(
+      "INSERT INTO equipe (nom_eq,abre_eq,logo_eq,ville_eq,date_eq) VALUES (?,?,?,?,?)",
+      [
+        req.body.nom,
+        req.body.abreviation,
+        photo,
+        req.body.ville,
+        req.body.date_de_creation,
+      ],
+      (err, result) => {
+        if (err) {
+          console.error("Erreur lors de l'insertion de l'equipe :", err);
+          return res.status(500).send("Erreur lors de l'insertion de l'equipe");
+        }
+        //console.log("Nouvelle equipe inséré avec l'ID :", result.insertId);
+        req.flash("info", "Equipe ajouté avec succès !");
+        res.redirect("/gererEquipes");
+      }
+    );
+  } else {
+    db.query(
+      "INSERT INTO equipe (nom_eq,abre_eq,ville_eq,date_eq) VALUES (?,?,?,?,?)",
+      [
+        req.body.nom,
+        req.body.abreviation,
+        req.body.ville,
+        req.body.date_de_creation,
+      ],
+      (err, result) => {
+        if (err) {
+          console.error("Erreur lors de l'insertion de l'equipe :", err);
+          return res.status(500).send("Erreur lors de l'insertion de l'equipe");
+        }
+        //console.log("Nouvelle equipe inséré avec l'ID :", result.insertId);
+        req.flash("info", "Equipe ajouté avec succès !");
+        res.redirect("/gererEquipes");
+      }
+    );
+  }
+};
+
+exports.supprimerEquipes = async (req, res) => {
   db.query(
-    "DELETE FROM article WHERE id_art= ?",
+    "DELETE FROM equipe WHERE id_eq= ?",
     [req.params.id],
     (err, result) => {
       if (err) {
-        console.error("erreur supprimer article" + err);
-        return res.status(500).send("erreur sql supprimer article");
+        console.error("erreur supprimer equipe" + err);
+        return res.status(500).send("erreur sql supprimer equipe");
       }
     }
   );
-  await req.flash("info", "Article Supprime !!");
-  res.redirect(`/gererArticles/`);
+  await req.flash("info", "Equipe Supprime !!");
+  res.redirect(`/gererEquipes/`);
 };
-// put edit arbitre
-exports.editpostArticles = async (req, res) => {
+// put edit equipes
+exports.editpostEquipes = async (req, res) => {
   //console.log(req.params.id);
-
-  db.query(
-    "UPDATE article SET titre_art =?,description_art =?,date_art=?,format_art=?,auteur_art=? WHERE id_art=?",
-    [
-      req.body.titre_article,
-      req.body.description_article,
-      req.body.date_article,
-      req.body.format_article,
-      req.body.auteur_article,
-      req.params.id,
-    ],
-    (err, result) => {
-      if (err) {
-        console.error("erreur update article" + err);
-        return res.status(500).send("erreur sql update article");
+  if (req.file) {
+    photo = req.file.filename;
+    db.query(
+      "UPDATE equipe SET nom_eq=?,abre_eq=?,logo_eq=?,ville_eq=?,date_eq=? WHERE id_eq=?",
+      [
+        req.body.nom_equipe,
+        req.body.abreviation_equipe,
+        photo,
+        req.body.ville_equipe,
+        req.body.date_de_creation_equipe,
+        req.params.id,
+      ],
+      (err, result) => {
+        if (err) {
+          console.error("erreur update article" + err);
+          return res.status(500).send("erreur sql update article");
+        }
       }
-    }
-  );
+    );
+  } else {
+    db.query(
+      "UPDATE equipe SET nom_eq=?,abre_eq=?,ville_eq=?,date_eq=? WHERE id_eq=?",
+      [
+        req.body.nom_equipe,
+        req.body.abreviation_equipe,
+        req.body.ville_equipe,
+        req.body.date_de_creation_equipe,
+        req.params.id,
+      ],
+      (err, result) => {
+        if (err) {
+          console.error("erreur update equipe" + err);
+          return res.status(500).send("erreur sql update equipes");
+        }
+      }
+    );
+  }
 
-  await req.flash("info", "Article Modifié !!");
+  await req.flash("info", "Equipe Modifié !!");
 
-  res.redirect(`/gererArticles`);
+  res.redirect(`/gererEquipes`);
 };
 
 //-----------------------------------------------------------------------------------------------------------------------
 
 // la partie profile this need to be fixed
 exports.monprofile = async (req, res) => {
-  userId = req.params.id;
   const message_err = await req.flash("info");
   const message_scc = await req.flash("info1");
   const locals = {
     title: "Mon profile",
   };
   db.query(
-    "SELECT nom_utilisateur,email_co FROM compte WHERE id_co=?",
-    [userId],
+    "SELECT nom_utilisateur,email_co,photo_profil FROM compte WHERE id_co=?",
+    [2],
     (err, result) => {
       if (err) {
         console.error("erreur sql page profile  " + err);
         return res.status(500).send("erreur sql page profile ");
       }
       res.render("../views/Admin/profileAdmin", {
-        userId,
         locals,
         result,
         message_err,
         message_scc,
+        layout: "./layouts/mainAdmin.ejs",
       });
+    }
+  );
+};
+exports.monprofilepost = async (req, res) => {
+  const mdpactuel = req.body.mdpactuel;
+  const nvmdp = req.body.nvmdp;
+
+  const locals = {
+    title: "Mon profile",
+  };
+
+  // Store the response object outside the MySQL query callback
+  const response = res;
+
+  db.query(
+    "SELECT mot_de_passe, photo_profil FROM compte WHERE id_co=?",
+    [2],
+    (err, result) => {
+      if (err) {
+        console.error("erreur sql avoir mdp   " + err);
+        return response.status(500).send("erreur sql avoir mdp ");
+      }
+
+      // Check if current password matches
+      if (mdpactuel === result[0].mot_de_passe && !req.file) {
+        // If current password matches and no file (profile picture) is uploaded
+        photo_admin = result[0].photo_profil;
+        // Update password
+        db.query(
+          "UPDATE compte SET mot_de_passe=?,photo_profil=? WHERE id_co=?",
+          [nvmdp, photo_admin, 2],
+          (err, results) => {
+            if (err) {
+              console.error("erreur sql changer mdp   " + err);
+              return response.status(500).send("erreur sql changer mdp ");
+            } else {
+              req.flash("info1", "Mot de passe changé avec succès");
+              return response.redirect(`/monprofile`);
+            }
+          }
+        );
+      } else if (!req.body.mdpactuel && !req.file) {
+        // If neither the current password nor the file (profile picture) is updated
+
+        return response.redirect(`/monprofile`);
+      } else if (!req.body.mdpactuel && req.file) {
+        // If only the profile picture is being changed
+        photo_admin = req.file.filename;
+        db.query(
+          "UPDATE compte SET photo_profil=? WHERE id_co=?",
+          [photo_admin, 2],
+          (err, res) => {
+            if (err) {
+              console.error("erreur sql changer pfp   " + err);
+              return response.status(500).send("erreur sql changer pfp ");
+            }
+            return response.redirect(`/monprofile`);
+          }
+        );
+      } else {
+        // If the current password is incorrect
+        req.flash("info", "Mot de passe actuel est faux");
+        return response.redirect(`/monprofile`);
+      }
     }
   );
 };

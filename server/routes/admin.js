@@ -51,8 +51,18 @@ router.get("/gererArbitres", requireAuth, adminController.gererArbitres);
 router.get("/detailsArbitres/:id", requireAuth, adminController.viewArbitres);
 router.get("/editArbitre/:id", requireAuth, adminController.editArbitre);
 router.get("/ajouter_arbitres", requireAuth, adminController.addArbitres);
-router.post("/ajouter_arbitres", requireAuth, adminController.postArbitres);
-router.put("/editArbitres/:id", requireAuth, adminController.editpostArbitres);
+router.post(
+  "/ajouter_arbitres",
+  requireAuth,
+  upload.single("photoArbitre"),
+  adminController.postArbitres
+);
+router.put(
+  "/editArbitres/:id",
+  requireAuth,
+  upload.single("photoArbitre"),
+  adminController.editpostArbitres
+);
 router.delete(
   "/supprimerArbitres/:id",
   requireAuth,
@@ -76,8 +86,18 @@ router.get("/gererArticles", requireAuth, adminController.gererArticles);
 router.get("/detailsArticles/:id", requireAuth, adminController.viewArticles);
 router.get("/editArticles/:id", requireAuth, adminController.editArticles);
 router.get("/ajouter_Articles", requireAuth, adminController.addArticles);
-router.post("/ajouter_Articles", requireAuth, adminController.postArticles);
-router.put("/editArticles/:id", requireAuth, adminController.editpostArticles);
+router.post(
+  "/ajouter_Articles",
+  requireAuth,
+  upload.single("image_art"),
+  adminController.postArticles
+);
+router.put(
+  "/editArticles/:id",
+  requireAuth,
+  upload.single("image_art"),
+  adminController.editpostArticles
+);
 router.delete(
   "/supprimerArticles/:id",
   requireAuth,
@@ -96,21 +116,33 @@ router.delete(
   requireAuth,
   adminController.supprimerMatches
 );
-/*
+router.get("/monprofile", requireAuth, adminController.monprofile);
+router.put(
+  "/monprofile",
+  upload.single("photo_admin"),
+  adminController.monprofilepost
+);
+
 //pour les equipes
 router.get("/gererEquipes", requireAuth, adminController.gererEquipes);
 router.get("/detailsEquipes/:id", requireAuth, adminController.viewEquipes);
 router.get("/editEquipes/:id", requireAuth, adminController.editEquipes);
 router.get("/ajouter_Equipes", requireAuth, adminController.addEquipes);
-router.post("/ajouter_Equipes", requireAuth, adminController.postEquipes);
-router.put("/editEquipes/:id", requireAuth, adminController.editpostEquipes);
+router.post(
+  "/ajouter_Equipes",
+  requireAuth,
+  upload.single("LogoEquipe"),
+  adminController.postEquipes
+);
+router.put(
+  "/editEquipes/:id",
+  requireAuth,
+  upload.single("LogoEquipe"),
+  adminController.editpostEquipes
+);
 router.delete(
   "/supprimerEquipes/:id",
   requireAuth,
   adminController.supprimerEquipes
 );
-
-//la partie de profile
-//router.get("/monprofile/:id", adminController.monprofile); this need to be fixed
-*/
 module.exports = router;

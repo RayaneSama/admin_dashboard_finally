@@ -36,13 +36,14 @@
       method="POST"
       class="needs-validation"
       novalidate
+      enctype="multipart/form-data"
     >
       <div>
         <label for="validationCustom01" class="form-label">Nom</label>
         <input
           type="text"
           class="form-control"
-          name="nom"
+          name="nom_ar"
           id="validationCustom01"
           value=""
           required
@@ -54,7 +55,7 @@
         <input
           type="text"
           class="form-control"
-          name="prenom"
+          name="prenom_ar"
           id="validationCustom02"
           value=""
           required
@@ -62,14 +63,31 @@
         <div class="valid-feedback"></div>
       </div>
       <div>
-        <label for="validationCustom01" class="form-label">Poste</label>
-        <input
-          type="text"
-          class="form-control"
+        <label for="validationCustom04" class="form-label">Poste</label>
+        <select
+          class="form-select"
           name="poste"
+          id="validationCustom04"
+          required
+        >
+          <option selected disabled value=""></option>
+          <option>Arbitre Central</option>
+          <option>Arbitre de touche 1</option>
+          <option>Arbitre de touche 2</option>
+          <option>Arbitre de surface 1</option>
+          <option>Arbitre de surface 2</option>
+        </select>
+        <div class="invalid-feedback"></div>
+      </div>
+      <div>
+        <label for="validationCustom01" class="form-label">Photo:</label>
+        <input
+          type="file"
+          class="form-control"
+          name="photoArbitre"
           id="validationCustom01"
           value=""
-          required
+          accept="image/*"
         />
         <div class="valid-feedback"></div>
       </div>
